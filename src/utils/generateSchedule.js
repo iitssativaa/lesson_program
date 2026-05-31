@@ -1,15 +1,4 @@
-const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
-
-const hours = [
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-];
+import { days, hours, physicalLessonHours } from "../data/classrooms";
 
 function addOneHour(hour) {
   const [hourPart, minutePart] = hour.split(":").map(Number);
@@ -40,6 +29,18 @@ function canPlaceBlock({ course, day, startIndex, blockLength, occupiedSlots }) 
 
   if (blockHours.length < blockLength) {
     return false;
+  }
+
+  const isOnlineCourse = course.classroomGroup === "online";
+
+  if (!isOnlineCourse) {
+    const isPhysicalHourAvailable = blockHours.every((hour) =>
+      physicalLessonHours.includes(hour)
+    );
+
+    if (!isPhysicalHourAvailable) {
+      return false;
+    }
   }
 
   for (const hour of blockHours) {
@@ -96,9 +97,17 @@ function placeCourseBlocks(course, occupiedSlots) {
         const placement = {
           blockId,
           courseId: course.id,
+
+          courseCode: course.courseCode,
           courseName: course.name,
+
           instructor: course.instructor,
           classGroup: course.classGroup,
+
+          classroomGroup: course.classroomGroup,
+          classroomGroupLabel: course.classroomGroupLabel,
+          classroom: course.classroom,
+
           day,
           startHour,
           endHour,
@@ -132,7 +141,7 @@ function placeCourseBlocks(course, occupiedSlots) {
         success: false,
         placements: [],
         occupiedSlots,
-        reason: `${course.name} dersinin ${blockLength} saatlik bloğu için uygun yer bulunamadı.`,
+        reason: `${course.courseCode || course.name} dersinin ${blockLength} saatlik bloğu için uygun yer bulunamadı.`,
       };
     }
   }
@@ -176,7 +185,7 @@ export function generateSchedule(courses) {
 
       logs.push({
         type: "success",
-        message: `${course.name} dersi programa yerleştirildi.`,
+        message: `${course.courseCode || course.name} dersi programa yerleştirildi.`,
       });
     } else {
       unplacedCourses.push({

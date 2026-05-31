@@ -10,21 +10,15 @@ import {
     SplitSquareHorizontal,
     Users,
     Pencil,
-    X,
+    FileText,
+    FileSpreadsheet,
 } from "lucide-react";
+import {
+    exportScheduleToExcel,
+    exportScheduleToPDF,
+} from "../utils/exportSchedule";
 
-const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
-
-const hours = [
-    "09:00",
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-];
+import { days, hours, classroomGroups } from "../data/classrooms";
 
 const blockPatternOptions = {
     1: [{ label: "1", value: "1", blocks: [1] }],
@@ -58,9 +52,14 @@ function ScheduleDetailPage({
     onUpdateCourse,
     onGenerateSchedule,
 }) {
+    const [courseCode, setCourseCode] = useState("");
     const [courseName, setCourseName] = useState("");
     const [instructor, setInstructor] = useState("");
     const [classGroup, setClassGroup] = useState("");
+
+    const [classroomGroup, setClassroomGroup] = useState("iibf");
+    const [classroom, setClassroom] = useState("C-001");
+
     const [weeklyHours, setWeeklyHours] = useState("2");
     const [blockPattern, setBlockPattern] = useState("2");
     const [preventSameDayBlocks, setPreventSameDayBlocks] = useState(true);
@@ -77,6 +76,12 @@ function ScheduleDetailPage({
 
     const selectedWeeklyHours = Number(weeklyHours);
     const availableBlockPatterns = blockPatternOptions[selectedWeeklyHours] || [];
+
+    const selectedClassroomGroup = classroomGroups.find(
+        (group) => group.id === classroomGroup
+    );
+
+    const availableClassrooms = selectedClassroomGroup?.rooms || [];
 
     const toggleUnavailableDay = (day) => {
         if (unavailableDays.includes(day)) {
@@ -104,10 +109,22 @@ function ScheduleDetailPage({
         }
     };
 
+    const handleClassroomGroupChange = (value) => {
+        setClassroomGroup(value);
+
+        const selectedGroup = classroomGroups.find((group) => group.id === value);
+        const firstRoom = selectedGroup?.rooms?.[0] || "";
+
+        setClassroom(firstRoom);
+    };
+
     const resetForm = () => {
+        setCourseCode("");
         setCourseName("");
         setInstructor("");
         setClassGroup("");
+        setClassroomGroup("iibf");
+        setClassroom("C-001");
         setWeeklyHours("2");
         setBlockPattern("2");
         setPreventSameDayBlocks(true);
@@ -117,8 +134,13 @@ function ScheduleDetailPage({
     };
 
     const handleEditCourse = (course) => {
+        const groupId = course.classroomGroup || "iibf";
+        const group = classroomGroups.find((item) => item.id === groupId);
+        const firstRoom = group?.rooms?.[0] || "C-001";
+
         setEditingCourseId(course.id);
 
+        setCourseCode(course.courseCode || "");
         setCourseName(course.name || "");
 
         setInstructor(
@@ -128,6 +150,9 @@ function ScheduleDetailPage({
         setClassGroup(
             course.classGroup === "Belirtilmedi" ? "" : course.classGroup || ""
         );
+
+        setClassroomGroup(groupId);
+        setClassroom(course.classroom || firstRoom);
 
         setWeeklyHours(String(course.weeklyHours || 2));
         setBlockPattern(course.blockPattern || String(course.weeklyHours || 2));
@@ -139,16 +164,23 @@ function ScheduleDetailPage({
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (!courseName.trim()) return;
+        if (!courseCode.trim() || !courseName.trim()) return;
 
         const selectedPattern = availableBlockPatterns.find(
             (pattern) => pattern.value === blockPattern
         );
 
         const coursePayload = {
-            name: courseName,
+            courseCode: courseCode.trim().toUpperCase(),
+            name: courseName.trim(),
+
             instructor: instructor || "Belirtilmedi",
             classGroup: classGroup || "Belirtilmedi",
+
+            classroomGroup,
+            classroomGroupLabel: selectedClassroomGroup?.label || "Belirtilmedi",
+            classroom: classroomGroup === "online" ? "Online" : classroom,
+
             weeklyHours: selectedWeeklyHours,
             blockPattern,
             blocks: selectedPattern?.blocks || [selectedWeeklyHours],
@@ -168,7 +200,6 @@ function ScheduleDetailPage({
 
     return (
         <div>
-            {/* Üst Başlık */}
             <div className="flex items-center justify-between gap-5">
                 <div>
                     <button
@@ -189,18 +220,37 @@ function ScheduleDetailPage({
                     </p>
                 </div>
 
-                <button
-                    onClick={() => onGenerateSchedule(schedule.id)}
-                    disabled={courses.length === 0}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-950 text-white font-semibold hover:bg-slate-800 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <Wand2 size={20} />
-                    Programı Otomatik Oluştur
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => onGenerateSchedule(schedule.id)}
+                        disabled={courses.length === 0}
+                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-950 text-white font-semibold hover:bg-slate-800 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <Wand2 size={20} />
+                        Programı Otomatik Oluştur
+                    </button>
+
+                    <button
+                        onClick={() => exportScheduleToPDF(schedule)}
+                        disabled={!generatedSchedule}
+                        className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <FileText size={19} />
+                        PDF
+                    </button>
+
+                    <button
+                        onClick={() => exportScheduleToExcel(schedule)}
+                        disabled={!generatedSchedule}
+                        className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <FileSpreadsheet size={19} />
+                        Excel
+                    </button>
+                </div>
             </div>
 
             <div className="mt-8 grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-6">
-                {/* Sol Ders Kataloğu */}
                 <section className="space-y-5">
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                         <div className="flex items-center gap-3">
@@ -212,6 +262,7 @@ function ScheduleDetailPage({
                                 <h3 className="text-lg font-bold text-slate-900">
                                     {editingCourseId ? "Dersi Düzenle" : "Ders Kataloğu"}
                                 </h3>
+
                                 <p className="text-sm text-slate-500">
                                     {editingCourseId
                                         ? "Seçili dersin bilgilerini güncelleyin"
@@ -223,12 +274,24 @@ function ScheduleDetailPage({
                         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
                             <div>
                                 <label className="text-sm font-medium text-slate-700">
-                                    Ders Adı
+                                    Ders Kodu
+                                </label>
+                                <input
+                                    value={courseCode}
+                                    onChange={(e) => setCourseCode(e.target.value)}
+                                    placeholder="Örn: MAT101"
+                                    className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 uppercase outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-slate-700">
+                                    Dersin Tam Adı
                                 </label>
                                 <input
                                     value={courseName}
                                     onChange={(e) => setCourseName(e.target.value)}
-                                    placeholder="Örn: Matematik"
+                                    placeholder="Örn: Matematik I"
                                     className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                                 />
                             </div>
@@ -255,6 +318,55 @@ function ScheduleDetailPage({
                                     placeholder="Örn: Bilgisayar Müh. 2. Sınıf"
                                     className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Fakülte / Derslik Kategorisi
+                                    </label>
+
+                                    <select
+                                        value={classroomGroup}
+                                        onChange={(e) => handleClassroomGroupChange(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                                    >
+                                        {classroomGroups.map((group) => (
+                                            <option key={group.id} value={group.id}>
+                                                {group.label}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        {selectedClassroomGroup?.description}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Derslik
+                                    </label>
+
+                                    <select
+                                        value={classroom}
+                                        onChange={(e) => setClassroom(e.target.value)}
+                                        disabled={classroomGroup === "online"}
+                                        className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 disabled:bg-slate-100 disabled:text-slate-500"
+                                    >
+                                        {availableClassrooms.map((room) => (
+                                            <option key={room} value={room}>
+                                                {room}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    {classroomGroup === "online" && (
+                                        <p className="mt-2 text-xs text-cyan-700 font-semibold">
+                                            Online dersler 21:00’e kadar programa yerleştirilebilir.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -330,7 +442,6 @@ function ScheduleDetailPage({
                                 </div>
                             </div>
 
-                            {/* Uygun olmayan günler */}
                             <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
                                 <div className="flex items-center gap-2">
                                     <Ban size={18} className="text-red-500" />
@@ -364,7 +475,6 @@ function ScheduleDetailPage({
                                 </div>
                             </div>
 
-                            {/* Uygun olmayan saatler */}
                             <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
                                 <div className="flex items-center gap-2">
                                     <Ban size={18} className="text-red-500" />
@@ -420,7 +530,6 @@ function ScheduleDetailPage({
                         </form>
                     </div>
 
-                    {/* Eklenen Dersler */}
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-900">
@@ -447,7 +556,11 @@ function ScheduleDetailPage({
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
-                                                <h4 className="font-bold text-slate-900">
+                                                <p className="text-sm font-black tracking-wide text-slate-900">
+                                                    {course.courseCode || "KOD YOK"}
+                                                </p>
+
+                                                <h4 className="mt-1 font-bold text-slate-700">
                                                     {course.name}
                                                 </h4>
 
@@ -459,6 +572,11 @@ function ScheduleDetailPage({
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold">
                                                         <Users size={13} />
                                                         {course.classGroup || "Belirtilmedi"}
+                                                    </span>
+
+                                                    <span className="px-2 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-semibold">
+                                                        {course.classroomGroupLabel || "Derslik"} /{" "}
+                                                        {course.classroom || "Belirtilmedi"}
                                                     </span>
 
                                                     <span className="px-2 py-1 rounded-lg bg-cyan-50 text-cyan-700 text-xs font-semibold">
@@ -514,7 +632,6 @@ function ScheduleDetailPage({
                     </div>
                 </section>
 
-                {/* Sağ Haftalık Program */}
                 <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                     <div className="flex items-center justify-between gap-5">
                         <div className="flex items-center gap-3">
@@ -538,7 +655,7 @@ function ScheduleDetailPage({
                     </div>
 
                     <div className="mt-6 overflow-x-auto">
-                        <div className="min-w-[850px] rounded-2xl border border-slate-200 overflow-hidden">
+                        <div className="min-w-[950px] rounded-2xl border border-slate-200 overflow-hidden">
                             <div className="grid grid-cols-[90px_repeat(5,1fr)] bg-slate-950 text-white">
                                 <div className="p-3 text-sm font-semibold border-r border-slate-800">
                                     Saat
@@ -579,33 +696,25 @@ function ScheduleDetailPage({
                                                             : "bg-cyan-50 text-cyan-800 border-cyan-100"
                                                             }`}
                                                     >
-                                                        {slot.isStart ? (
-                                                            <>
-                                                                <p className="text-sm font-bold leading-tight">
-                                                                    {slot.courseName}
-                                                                </p>
+                                                        <p className="text-sm font-black tracking-wide leading-tight">
+                                                            {slot.courseCode || "KOD YOK"}
+                                                        </p>
 
-                                                                <p className="mt-1 text-xs font-semibold opacity-80">
-                                                                    {slot.startHour} - {slot.endHour}
-                                                                </p>
+                                                        <p className="mt-1 text-xs font-semibold leading-tight opacity-90">
+                                                            {slot.courseName}
+                                                        </p>
 
-                                                                <p className="mt-1 text-xs opacity-80">
-                                                                    {slot.instructor}
-                                                                </p>
+                                                        <p className="mt-1 text-xs font-semibold opacity-80">
+                                                            {slot.startHour} - {slot.endHour}
+                                                        </p>
 
-                                                                <p className="mt-1 text-xs opacity-80">
-                                                                    {slot.classGroup}
-                                                                </p>
+                                                        <p className="mt-1 text-xs opacity-80">
+                                                            {slot.classroomGroupLabel} / {slot.classroom}
+                                                        </p>
 
-                                                                {slot.totalBlocks > 1 && (
-                                                                    <p className="mt-2 inline-block rounded-lg bg-white/50 px-2 py-1 text-[11px] font-bold">
-                                                                        Blok {slot.blockIndex}/{slot.totalBlocks}
-                                                                    </p>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <p className="text-xs font-semibold">
-                                                                {slot.courseName} devam
+                                                        {slot.totalBlocks > 1 && (
+                                                            <p className="mt-2 inline-block rounded-lg bg-white/50 px-2 py-1 text-[11px] font-bold">
+                                                                Blok {slot.blockIndex}/{slot.totalBlocks}
                                                             </p>
                                                         )}
                                                     </div>

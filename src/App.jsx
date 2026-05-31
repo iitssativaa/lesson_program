@@ -38,6 +38,7 @@ function App() {
       name: scheduleName,
       createdAt: new Date().toLocaleDateString("tr-TR"),
       courses: [],
+      generatedSchedule: null,
     };
 
     setSchedules([...schedules, newSchedule]);
@@ -58,27 +59,6 @@ function App() {
       setSelectedScheduleId(null);
       setActivePage("schedules");
     }
-  };
-
-  const handleUpdateCourse = (scheduleId, courseId, updatedCourseData) => {
-    setSchedules(
-      schedules.map((schedule) => {
-        if (schedule.id !== scheduleId) return schedule;
-
-        return {
-          ...schedule,
-          courses: (schedule.courses || []).map((course) => {
-            if (course.id !== courseId) return course;
-
-            return {
-              ...course,
-              ...updatedCourseData,
-            };
-          }),
-          generatedSchedule: null,
-        };
-      })
-    );
   };
 
   const handleOpenSchedule = (scheduleId) => {
@@ -120,6 +100,27 @@ function App() {
           courses: (schedule.courses || []).filter(
             (course) => course.id !== courseId
           ),
+          generatedSchedule: null,
+        };
+      })
+    );
+  };
+
+  const handleUpdateCourse = (scheduleId, courseId, updatedCourseData) => {
+    setSchedules(
+      schedules.map((schedule) => {
+        if (schedule.id !== scheduleId) return schedule;
+
+        return {
+          ...schedule,
+          courses: (schedule.courses || []).map((course) => {
+            if (course.id !== courseId) return course;
+
+            return {
+              ...course,
+              ...updatedCourseData,
+            };
+          }),
           generatedSchedule: null,
         };
       })
