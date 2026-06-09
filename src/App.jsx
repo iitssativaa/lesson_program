@@ -147,10 +147,10 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 flex">
+    <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
         {activePage === "home" && <HomePage schedules={schedules} />}
 
         {activePage === "schedules" && (

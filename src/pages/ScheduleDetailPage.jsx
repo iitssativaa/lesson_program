@@ -220,11 +220,11 @@ function ScheduleDetailPage({
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full xl:w-auto">
                     <button
                         onClick={() => onGenerateSchedule(schedule.id)}
                         disabled={courses.length === 0}
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-950 text-white font-semibold hover:bg-slate-800 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-950 text-white font-semibold hover:bg-slate-800 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <Wand2 size={20} />
                         Programı Otomatik Oluştur
@@ -233,7 +233,7 @@ function ScheduleDetailPage({
                     <button
                         onClick={() => exportScheduleToPDF(schedule)}
                         disabled={!generatedSchedule}
-                        className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <FileText size={19} />
                         PDF
@@ -242,7 +242,7 @@ function ScheduleDetailPage({
                     <button
                         onClick={() => exportScheduleToExcel(schedule)}
                         disabled={!generatedSchedule}
-                        className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <FileSpreadsheet size={19} />
                         Excel
@@ -250,9 +250,9 @@ function ScheduleDetailPage({
                 </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-6">
+            <div className="mt-8 grid grid-cols-1 2xl:grid-cols-[440px_1fr] gap-6">
                 <section className="space-y-5">
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
                         <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center">
                                 <BookOpen className="text-cyan-600" size={24} />
@@ -632,8 +632,8 @@ function ScheduleDetailPage({
                     </div>
                 </section>
 
-                <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                    <div className="flex items-center justify-between gap-5">
+                <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 overflow-hidden">
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
                         <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-xl bg-slate-950 flex items-center justify-center">
                                 <CalendarDays className="text-white" size={24} />
@@ -655,7 +655,7 @@ function ScheduleDetailPage({
                     </div>
 
                     <div className="mt-6 overflow-x-auto">
-                        <div className="min-w-[950px] rounded-2xl border border-slate-200 overflow-hidden">
+                        <div className="min-w-[760px] lg:min-w-[950px] rounded-2xl border border-slate-200 overflow-hidden">
                             <div className="grid grid-cols-[90px_repeat(5,1fr)] bg-slate-950 text-white">
                                 <div className="p-3 text-sm font-semibold border-r border-slate-800">
                                     Saat
@@ -674,7 +674,7 @@ function ScheduleDetailPage({
                             {hours.map((hour) => (
                                 <div
                                     key={hour}
-                                    className="grid grid-cols-[90px_repeat(5,1fr)] min-h-20 border-t border-slate-200"
+                                    className="grid grid-cols-[80px_repeat(5,1fr)] sm:grid-cols-[90px_repeat(5,1fr)] min-h-20 border-t border-slate-200"
                                 >
                                     <div className="p-3 text-sm font-semibold text-slate-500 bg-slate-50 border-r border-slate-200">
                                         {hour}

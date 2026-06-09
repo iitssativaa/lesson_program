@@ -7,10 +7,10 @@ function CreateScheduleModal({
   onCreate,
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
             Yeni Ders Programı
           </h2>
 
@@ -43,17 +43,17 @@ function CreateScheduleModal({
           />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 transition"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 transition"
           >
             Vazgeç
           </button>
 
           <button
             onClick={onCreate}
-            className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 transition"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 transition"
           >
             Oluştur
           </button>
