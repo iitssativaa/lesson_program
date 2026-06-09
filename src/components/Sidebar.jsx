@@ -1,6 +1,9 @@
-import { Home, CalendarDays, User, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Home, CalendarDays, User, LogOut, Menu, X } from "lucide-react";
 
 function Sidebar({ activePage, setActivePage }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const menuItems = [
     {
       id: "home",
@@ -16,8 +19,16 @@ function Sidebar({ activePage, setActivePage }) {
       id: "profile",
       label: "Profil",
       icon: User,
+      disabled: true,
     },
   ];
+
+  const handleMenuClick = (item) => {
+    if (item.disabled) return;
+
+    setActivePage(item.id);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -38,14 +49,12 @@ function Sidebar({ activePage, setActivePage }) {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  if (item.id !== "profile") {
-                    setActivePage(item.id);
-                  }
-                }}
+                onClick={() => handleMenuClick(item)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
                   isActive
                     ? "bg-cyan-500 text-slate-950"
+                    : item.disabled
+                    ? "text-slate-600 cursor-not-allowed"
                     : "text-slate-300 hover:bg-slate-800 hover:text-white"
                 }`}
               >
@@ -64,43 +73,62 @@ function Sidebar({ activePage, setActivePage }) {
         </div>
       </aside>
 
-      {/* Mobile Top Navigation */}
-      <header className="lg:hidden bg-slate-950 text-white border-b border-slate-800">
-        <div className="px-4 py-4">
-          <h1 className="text-lg font-bold">DersPlan</h1>
-          <p className="text-xs text-slate-400">Otomatik Programlama</p>
+      {/* Mobile Header */}
+      <header className="lg:hidden sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800">
+        <div className="h-16 px-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold leading-tight">DersPlan</h1>
+            <p className="text-xs text-slate-400">Otomatik Programlama</p>
+          </div>
+
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-slate-800 transition"
+            aria-label="Menüyü aç/kapat"
+          >
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
 
-        <nav className="px-3 pb-3 grid grid-cols-2 gap-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activePage === item.id;
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="px-4 pb-4 bg-slate-950 border-t border-slate-800">
+            <nav className="pt-3 space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activePage === item.id;
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id !== "profile") {
-                    setActivePage(item.id);
-                  }
-                }}
-                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-cyan-500 text-slate-950"
-                    : "bg-slate-900 text-slate-300"
-                }`}
-              >
-                <Icon size={17} />
-                <span>{item.label}</span>
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleMenuClick(item)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                      isActive
+                        ? "bg-cyan-500 text-slate-950"
+                        : item.disabled
+                        ? "bg-slate-900/40 text-slate-600 cursor-not-allowed"
+                        : "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    <span>{item.label}</span>
+
+                    {item.disabled && (
+                      <span className="ml-auto text-[11px] text-slate-500">
+                        Yakında
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-red-500/10 text-red-300 hover:bg-red-500/15 transition">
+                <LogOut size={18} />
+                <span>Çıkış Yap</span>
               </button>
-            );
-          })}
-
-          <button className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold bg-red-500/10 text-red-300">
-            <LogOut size={17} />
-            <span>Çıkış</span>
-          </button>
-        </nav>
+            </nav>
+          </div>
+        )}
       </header>
     </>
   );
